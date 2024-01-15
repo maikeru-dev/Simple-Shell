@@ -10,5 +10,6 @@ typedef struct {
 
 Command commands[TOTAL_CMDS];
 
+int runCommand(char *);
 
 #endif // COMMANDS_H_
