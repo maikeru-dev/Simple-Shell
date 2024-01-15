@@ -1,3 +1,6 @@
+#ifndef SHELL_H_
+#define SHELL_H_
+
 #define PROMPT ">"
 
 // These are defined in the Simple_Shell.pdf document
@@ -9,3 +12,7 @@
 #define INPUT_OK 0
 #define INPUT_TERMINATE 1
 #define INPUT_SKIP 2
+
+void quit();
+
+#endif // SHELL_H_
