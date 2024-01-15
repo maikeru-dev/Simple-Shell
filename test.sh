@@ -2,7 +2,7 @@
 
 runTest()
 {
-    if [[ $(echo $2 | ./shell) = $3 ]]
+    if [[ $(printf "${2}" | ./shell) = $3 ]]
     then
         echo "TEST $1: PASSED"
     else
@@ -12,8 +12,8 @@ runTest()
 
 # STAGE 1
 
-runTest "0" "\n" ">>"
+runTest "0" "\n" ">>Exiting..."
 
-runTest "1" "exit\n this should be ignored" ">"
+runTest "1" "exit\n this should be ignored" ">Exiting..."
 
-runTest "2" "" ">"
+runTest "2" "" ">Exiting..."

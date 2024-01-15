@@ -1,13 +1,14 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int getInput(char *command) {
-  if (fgets(command, COMMAND_LENGTH, stdin) == NULL) {
+  if (fgets(command, COMMAND_LENGTH, stdin) == NULL || strcmp(command, "exit\n") == 0) {
     return INPUT_TERMINATE;
   }
 
-  if (command[0] == '\n') {
+  if (command[0] == '\n' ) {
     return INPUT_SKIP;
   }
 
@@ -15,7 +16,7 @@ int getInput(char *command) {
 }
 
 void quit() {
-  printf("Exiting... ");
+  printf("Exiting...");
   exit(0);
 }
 
