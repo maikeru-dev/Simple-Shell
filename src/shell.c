@@ -9,13 +9,12 @@ int getInput(char *command) {
     return INPUT_TERMINATE;
   }
 
-  if (command[0] == '\n' ) {
+  if (command[0] == '\n') {
     return INPUT_SKIP;
   }
 
   return INPUT_OK;
 }
-
 
 void quit() {
   printf("Exiting...");
@@ -23,20 +22,29 @@ void quit() {
 }
 
 int main() {
-  char command[COMMAND_LENGTH];
+  char input[COMMAND_LENGTH];
+  int builtInC = 0;
+  Command **builtInCommands;
+
+  produceBuiltIn(builtInCommands, builtInC);
+
   while (1) {
+    Command *command;
     printf(PROMPT);
 
-    switch (getInput(command)) {
+    switch (getInput(input)) {
     case INPUT_TERMINATE:
       quit();
       break;
     case INPUT_SKIP:
       continue;
       break;
-    case INPUT_OK:
-      runCommand(command);
+      // case INPUT_OK:
     }
+
+    createCommand(command, input);
+    extendCommand(command, cmdChkExists(builtInCommands, builtInC, command));
+    executeCommand(command);
   }
   return 0;
 }

@@ -1,17 +1,16 @@
+#include "constants.h"
+#include <linux/limits.h>
+
 #ifndef SHELL_H_
 #define SHELL_H_
 
-#define PROMPT ">"
-
-// These are defined in the Simple_Shell.pdf document
-// Please avoid changing them.
-#define COMMAND_LENGTH 512
-#define TOKENS_LENGTH 50
-#define HISTORY_LENGTH 5
-
-#define INPUT_OK 0
-#define INPUT_TERMINATE 1
-#define INPUT_SKIP 2
+// Undeveloped Idea: state is not necessary, but could be useful.
+/* struct State { */
+/*   char PATH[PATH_LENGTH]; */
+/*   char WORK_DIR[PATH_MAX]; */
+/* }; */
+/**/
+/* typedef struct State State; */
 
 void quit();
 
