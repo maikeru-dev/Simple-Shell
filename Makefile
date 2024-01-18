@@ -2,7 +2,7 @@
 SOURCES := $(shell find src -name '*.c')
 
 build:
-	gcc -Wall  $(SOURCES) -o ./out/shell
+	gcc -Wall  $(SOURCES) -fsanitize=address -o ./out/shell
 
 test: build
 	./test.sh
