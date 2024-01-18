@@ -16,7 +16,21 @@ int exit_fn(int argc, char **argv) {
   return 0;
 }
 
-int chdir_fn(int argc, char **argv) {}
+int chdir_fn(int argc, char **argv) {
+  argc--;
+  if (argc > 1) {
+    printf("cd: Too many arguments\n");
+    return 1;
+  }
+  if (argc < 1) {
+    printf("cd: No arguments provided\n");
+    return 1;
+  }
+
+  chdir(argv[1]);
+
+  return 0;
+}
 
 int getpath_fn(int argc, char **argv) {
   printf("%s\n", getenv("PATH"));
@@ -26,7 +40,7 @@ int getpath_fn(int argc, char **argv) {
 int setpath_fn(int argc, char **argv) {
   argc--;
   if (argc > 1) {
-    printf("setpath: %d arguments found. Enter only 1.\n", argc);
+    printf("setpath: Too many arguments\n");
     return 1;
   }
   if (argc < 1) {
@@ -137,6 +151,7 @@ int produceBuiltIn(Command **commands, int *argc) {
   commands[0] = _createBuiltInCommand("exit", &exit_fn);
   commands[1] = _createBuiltInCommand("getpath", &getpath_fn);
   commands[2] = _createBuiltInCommand("setpath", &setpath_fn);
+  commands[3] = _createBuiltInCommand("cd", &chdir_fn);
   return 0;
 }
 

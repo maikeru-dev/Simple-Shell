@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int getInput(char *command) {
   if (fgets(command, COMMAND_LENGTH, stdin) == NULL) {
@@ -33,6 +34,7 @@ int main() {
   Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
   char *originalPath = getenv("PATH");
 
+  chdir(getenv("HOME"));
   produceBuiltIn(builtInCommands, &builtInC);
 
   while (loop) {
