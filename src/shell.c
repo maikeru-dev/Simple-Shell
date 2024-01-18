@@ -24,12 +24,12 @@ void quit() {
 int main() {
   char input[COMMAND_LENGTH];
   int builtInC = 0;
-  Command **builtInCommands;
+  Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
 
-  produceBuiltIn(builtInCommands, builtInC);
+  produceBuiltIn(builtInCommands, &builtInC);
 
   while (1) {
-    Command *command;
+    Command *command = malloc(sizeof(Command));
     printf(PROMPT);
 
     switch (getInput(input)) {
@@ -44,7 +44,12 @@ int main() {
 
     createCommand(command, input);
     extendCommand(command, cmdChkExists(builtInCommands, builtInC, command));
+
     executeCommand(command);
+
+    freeCommand(command);
   }
+
+  freeCommands(builtInCommands, builtInC);
   return 0;
 }
