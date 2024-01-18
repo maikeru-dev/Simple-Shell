@@ -37,6 +37,6 @@ int freeCommands(Command **commands, int argc);
 int freeCommand(Command *command);
 
 Command *_createBuiltInCommand(char *input, int (*fn)(int argc, char **argv));
-int _tokenise(char **argv, int argc, char *input);
+int _tokenise(char **argv, int *argc, char *input);
 
 #endif // COMMANDS_H_

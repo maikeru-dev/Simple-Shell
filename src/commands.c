@@ -24,15 +24,17 @@ int getpath_fn(int argc, char **argv) {
 }
 
 int setpath_fn(int argc, char **argv) {
+  argc--;
   if (argc > 1) {
-    printf("setpath: Too many arguments");
+    printf("setpath: %d arguments found. Enter only 1.\n", argc);
     return 1;
   }
   if (argc < 1) {
-    printf("setpath: No arguments provided");
+    printf("setpath: No arguments provided\n");
+    return 1;
   }
 
-  setenv("PATH", argv[0], 1);
+  setenv("PATH", argv[1], 1);
 
   return 0;
 }
@@ -101,7 +103,7 @@ int createCommand(Command *command, char *input) {
   char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
   int argc;
 
-  _tokenise(argv, argc, input);
+  _tokenise(argv, &argc, input);
 
   command->type = EXECUTE;
   command->tokens = argv;
@@ -134,6 +136,7 @@ int produceBuiltIn(Command **commands, int *argc) {
 
   commands[0] = _createBuiltInCommand("exit", &exit_fn);
   commands[1] = _createBuiltInCommand("getpath", &getpath_fn);
+  commands[2] = _createBuiltInCommand("setpath", &setpath_fn);
   return 0;
 }
 
@@ -142,7 +145,7 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **)) {
   char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
   Command *command = malloc(sizeof(Command));
 
-  _tokenise(argv, argc, input);
+  _tokenise(argv, &argc, input);
   command->type = BUILTIN;
   command->fn = fn;
   command->length = argc; // we don't actually need to care about the length,
@@ -155,12 +158,12 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **)) {
 // TODO: Make sure the string tokeniser fn uses redirection and operators as
 // well as spaces and new line characters. Redirection and operators will not be
 // supported (in this branch..?)
-int _tokenise(char **argv, int argc, char *input) {
-  argc = 0;
-  argv[argc] = strtok(input, " \n");
+int _tokenise(char **argv, int *argc, char *input) {
+  *argc = 0;
+  argv[*argc] = strtok(input, " \n");
   do {
-    argc++;
-    argv[argc] = strtok(NULL, " \n");
-  } while (argv[argc] != NULL);
+    (*argc)++;
+    argv[*argc] = strtok(NULL, " \n");
+  } while (argv[*argc] != NULL);
   return 0;
 }

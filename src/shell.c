@@ -13,6 +13,11 @@ int getInput(char *command) {
     return INPUT_SKIP;
   }
 
+  // char *newLine;
+  // if ((newLine = strtok(command, "\n")) != NULL) {
+  //   *newLine = '\0';
+  // }
+
   return INPUT_OK;
 }
 
