@@ -17,10 +17,15 @@ struct Command {
 
 typedef struct Command Command;
 
-/* BUILTIN COMMANDS */
+// Built-In commands -- private
 int exit_fn(int argc, char **argv);
-
-// BUILTIN COMMANDS END
+int chdir_fn(int argc, char **argv);
+int getpath_fn(int argc, char **argv);
+int setpath_fn(int argc, char **argv);
+int invoke_fn(int argc, char **argv);
+int alias_fn(int argc, char **argv);
+int unalias_fn(int argc, char **argv);
+// End
 
 int produceBuiltIn(Command **commands, int *argc);
 int extendCommand(Command *child, Command *parent);

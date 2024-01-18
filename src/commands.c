@@ -16,6 +16,27 @@ int exit_fn(int argc, char **argv) {
   return 0;
 }
 
+int chdir_fn(int argc, char **argv) {}
+
+int getpath_fn(int argc, char **argv) {
+  printf("%s\n", getenv("PATH"));
+  return 0;
+}
+
+int setpath_fn(int argc, char **argv) {
+  if (argc > 1) {
+    printf("setpath: Too many arguments");
+    return 1;
+  }
+  if (argc < 1) {
+    printf("setpath: No arguments provided");
+  }
+
+  setenv("PATH", argv[0], 1);
+
+  return 0;
+}
+
 int executeCommand(Command *command) {
   switch (command->type) {
 
@@ -112,6 +133,7 @@ int produceBuiltIn(Command **commands, int *argc) {
   *argc = TOTAL_CMDS;
 
   commands[0] = _createBuiltInCommand("exit", &exit_fn);
+  commands[1] = _createBuiltInCommand("getpath", &getpath_fn);
   return 0;
 }
 
@@ -130,6 +152,9 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **)) {
   return command;
 }
 
+// TODO: Make sure the string tokeniser fn uses redirection and operators as
+// well as spaces and new line characters. Redirection and operators will not be
+// supported (in this branch..?)
 int _tokenise(char **argv, int argc, char *input) {
   argc = 0;
   argv[argc] = strtok(input, " \n");

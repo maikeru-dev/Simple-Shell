@@ -22,23 +22,23 @@ void quit() {
 }
 
 int main() {
+  int loop = 1;
   char input[COMMAND_LENGTH];
   int builtInC = 0;
   Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
+  char *originalPath = getenv("PATH");
 
   produceBuiltIn(builtInCommands, &builtInC);
 
-  while (1) {
+  while (loop) {
     Command *command = malloc(sizeof(Command));
     printf(PROMPT);
 
     switch (getInput(input)) {
     case INPUT_TERMINATE:
-      quit();
-      break;
+      loop = 0;
     case INPUT_SKIP:
       continue;
-      break;
       // case INPUT_OK:
     }
 
@@ -50,6 +50,8 @@ int main() {
     freeCommand(command);
   }
 
+  setenv("PATH", originalPath, 1); // Replace PATH with the saved one
   freeCommands(builtInCommands, builtInC);
+  quit();
   return 0;
 }

@@ -1,16 +1,18 @@
+#include "commands.h"
 #include "constants.h"
-#include <linux/limits.h>
 
 #ifndef SHELL_H_
 #define SHELL_H_
 
-// Undeveloped Idea: state is not necessary, but could be useful.
-/* struct State { */
-/*   char PATH[PATH_LENGTH]; */
-/*   char WORK_DIR[PATH_MAX]; */
-/* }; */
-/**/
-/* typedef struct State State; */
+// TODO: Finish state.
+// Undeveloped Idea: state is necessary with History and Alias list, but could
+// be useful.
+struct State {
+  Command **Aliases;
+  Command **History;
+};
+
+typedef struct State State;
 
 void quit();
 
