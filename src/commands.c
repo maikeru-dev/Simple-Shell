@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 int exit_fn(int argc, char **argv) {
   (void)(argc); // supress unused warning
@@ -18,7 +21,32 @@ int executeCommand(Command *command) {
 
   case BUILTIN:
     command->fn(command->length, command->tokens);
+    break;
   case EXECUTE:
+    // remember that when aliases occur, you must compile the arguments in case
+    // they are included.
+    {
+      pid_t pid = fork();
+      if (pid < 0) {
+        perror("No forking allowed apparently!");
+        return 1;
+      }
+
+      if (pid == 0) {
+        char *cmdCopy =
+            strdup(command->tokens[0]); // feel free to improve this name. this
+                                        // var is used to send an error back
+                                        // when execvp fails.
+        execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                          // only comes back when it fails, as
+                                          // it exits on success.
+        perror(cmdCopy);
+        exit(0);
+      }
+
+      wait(NULL);
+    }
+    break;
   case ALIASES:
     break;
   }
