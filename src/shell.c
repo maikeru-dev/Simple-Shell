@@ -14,6 +14,10 @@ int getInput(char *command) {
     return INPUT_SKIP;
   }
 
+  // TODO: Add a way to detect whether input is out of bounds, special note:
+  // if '\n' is NOT present, that means it must have been cut off by input
+  // limit denoted "COMMAND_LENGTH".
+  //
   // char *newLine;
   // if ((newLine = strtok(command, "\n")) != NULL) {
   //   *newLine = '\0';
@@ -38,23 +42,30 @@ int main() {
   produceBuiltIn(builtInCommands, &builtInC);
 
   while (loop) {
-    Command *command = malloc(sizeof(Command));
+    /* Be very careful using this variable, any references used to any of its
+     * mallocd/const members must be duplicated, if you do not duplicate them,
+     * expect unexpected runtime bugs. */
+    Command command;
     printf(PROMPT);
 
     switch (getInput(input)) {
     case INPUT_TERMINATE:
       loop = 0;
-    case INPUT_SKIP:
+      printf("\n");
+    case INPUT_SKIP: // remember INPUT_TERMINATE flows into INPUT_SKIP.
       continue;
-      // case INPUT_OK:
     }
 
-    createCommand(command, input);
-    extendCommand(command, cmdChkExists(builtInCommands, builtInC, command));
+    createCommand(&command, input);
 
-    executeCommand(command);
+    // If found a match, apply parent properties to child's, else do nothing.
+    extendCommand(&command, cmdChkExists(builtInCommands, builtInC, &command));
 
-    freeCommand(command);
+    // Executes any command of any type.
+    executeCommand(&command);
+
+    // Free any malloc'd data.
+    freeCommand(&command);
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one

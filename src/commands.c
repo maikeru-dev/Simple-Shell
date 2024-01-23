@@ -93,7 +93,6 @@ int executeCommand(Command *command) {
 
 int freeCommand(Command *command) {
   free(command->tokens);
-  free(command);
   command = 0;
   return 0;
 }
@@ -101,12 +100,15 @@ int freeCommand(Command *command) {
 int freeCommands(Command **commands, int argc) {
   for (int i = 0; i < argc; i++) {
     freeCommand(commands[i]);
+    free(commands[i]);
   }
   free(commands);
 
   return 0;
 }
 int extendCommand(Command *child, Command *parent) {
+  if (child == parent)
+    return 0;
   child->type = parent->type;
   child->fn = parent->fn;
 
@@ -126,10 +128,6 @@ int createCommand(Command *command, char *input) {
   return 0;
 }
 
-/*
- * Compares whether the first token is the same within another command from a
- * list.
- * */
 Command *cmdChkExists(Command **commands, int argc, Command *command) {
   for (int i = 0; i < argc; i++) {
     // printf("%d %d ", commands, command);
@@ -144,7 +142,6 @@ Command *cmdChkExists(Command **commands, int argc, Command *command) {
   return command;
 }
 
-// Note: command[] should have a length of TOTAL_CMDS (found in "constants.h")
 int produceBuiltIn(Command **commands, int *argc) {
   *argc = TOTAL_CMDS;
 
