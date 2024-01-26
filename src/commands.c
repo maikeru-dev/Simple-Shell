@@ -9,6 +9,18 @@
 #include <unistd.h>
 #include <errno.h>
 
+typedef struct Builtin Builtin;
+struct Builtin {
+  char *name;
+  int (*fn)(int argc, char **argv);
+};
+
+typedef struct Parsed Parsed;
+struct Parsed {
+  int argc;
+  char **argv;
+};
+
 int exit_fn(int argc, char **argv) {
   (void)(argc); // supress unused warning
   (void)(argv);
@@ -37,6 +49,8 @@ int chdir_fn(int argc, char **argv) {
 }
 
 int getpath_fn(int argc, char **argv) {
+  (void)(argc); // supress unused warning
+  (void)(argv);
   printf("%s\n", getenv("PATH"));
   return 0;
 }
@@ -72,20 +86,10 @@ int (*getBuiltin(Builtin *builtins, char *name)) (int, char **){
   return NULL;
 }
 
-// Note: command[] should have a length of TOTAL_CMDS (found in "constants.h")
-Builtin *produceBuiltins()  {
-  Builtin* builtins = malloc(TOTAL_CMDS * sizeof(Builtin));
-  builtins[0] = (Builtin) { "exit", &exit_fn };
-  builtins[1] = (Builtin) {"getpath", &getpath_fn};
-  builtins[2] = (Builtin) {"setpath", &setpath_fn};
-  builtins[3] = (Builtin) {"cd", &chdir_fn};
-  return builtins;
-}
-
 // TODO: Make sure the string tokeniser fn uses redirection and operators as
 // well as spaces and new line characters. Redirection and operators will not be
 // supported (in this branch..?)
-Parsed _tokenise(char *input) {
+Parsed tokenise(char *input) {
   Parsed r;
   r.argc = 0;
   r.argv = malloc(sizeof(char*) * TOKENS_LENGTH);
@@ -95,4 +99,39 @@ Parsed _tokenise(char *input) {
     r.argv[r.argc] = strtok(NULL, " \n");;
   } while (r.argv[r.argc] != NULL);
   return r;
+}
+
+// evaluates input and returns exit code
+void eval_command(char* input) {
+  Builtin builtins[TOTAL_CMDS] = {
+    { "exit", &exit_fn },
+    {"getpath", &getpath_fn},
+    {"setpath", &setpath_fn},
+    {"cd", &chdir_fn},
+  };
+
+  Parsed p = tokenise(input);
+  int (*builtin)(int, char **) = getBuiltin(builtins, (p.argv)[0]);
+  if (builtin != NULL) {
+    builtin(p.argc, p.argv);
+    return;
+  }
+
+  pid_t pid = fork();
+  if (pid < 0) {
+    perror("No forking allowed apparently!");
+    exit(0);
+  }
+
+  if (pid == 0) {
+    // var is used to send an error back
+    // when execvp fails.
+    execvp(p.argv[0], p.argv); // no need to check if it fails. it
+    // only comes back when it fails, as
+    // it exits on success.
+    perror(p.argv[0]);
+    exit(0);
+  }
+
+  wait(NULL);
 }
