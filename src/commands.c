@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#define TOTAL_CMDS 4
+
 typedef struct Builtin Builtin;
 struct Builtin {
   char *name;
@@ -32,11 +34,11 @@ int exit_fn(int argc, char **argv) {
 int chdir_fn(int argc, char **argv) {
   argc--;
   if (argc > 1) {
-    printf("cd: Too many arguments\n");
+    perror("cd: Too many arguments\n");
     return 1;
   }
   if (argc < 1) {
-    printf("cd: No arguments provided\n");
+    perror("cd: No arguments provided\n");
     return 1;
   }
 
@@ -120,7 +122,7 @@ void eval_command(char* input) {
   pid_t pid = fork();
   if (pid < 0) {
     perror("No forking allowed apparently!");
-    exit(0);
+    exit(1);
   }
 
   if (pid == 0) {
