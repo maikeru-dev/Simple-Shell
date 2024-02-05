@@ -27,7 +27,7 @@ int getInput(char *command) {
 }
 
 void quit() {
-  printf("Exiting...");
+  printf("Exiting...\n");
   exit(0);
 }
 
@@ -38,7 +38,11 @@ int main() {
   Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
   char *originalPath = getenv("PATH");
 
-  chdir(getenv("HOME"));
+  char *dir;
+  dir = (char *) malloc(100*sizeof(char));
+  getcwd(dir,100);
+
+  chdir(dir);
   produceBuiltIn(builtInCommands, &builtInC);
 
   while (loop) {
@@ -46,7 +50,9 @@ int main() {
      * mallocd/const members must be duplicated, if you do not duplicate them,
      * expect unexpected runtime bugs. */
     Command command;
-    printf(PROMPT);
+    
+    getcwd(dir,100);
+    printf("%s%s", dir, PROMPT);
 
     switch (getInput(input)) {
     case INPUT_TERMINATE:
@@ -69,6 +75,7 @@ int main() {
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
+  free(dir);
   freeCommands(builtInCommands, builtInC);
   quit();
   return 0;
