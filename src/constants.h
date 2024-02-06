@@ -1,4 +1,4 @@
-#define PROMPT ">"
+#define PROMPT "> "
 
 // These are defined in the Simple_Shell.pdf document
 // Please avoid changing them.
