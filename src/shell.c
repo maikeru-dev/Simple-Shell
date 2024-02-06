@@ -38,8 +38,7 @@ int main() {
   Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
   char *originalPath = getenv("PATH");
 
-  char *dir;
-  dir = (char *) malloc(100*sizeof(char));
+  char dir[100];
   getcwd(dir,100);
 
   chdir(dir);
@@ -75,7 +74,6 @@ int main() {
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
-  free(dir);
   freeCommands(builtInCommands, builtInC);
   quit();
   return 0;
