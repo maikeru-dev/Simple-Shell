@@ -4,6 +4,7 @@
 // Please avoid changing them.
 #define COMMAND_LENGTH 512
 #define TOKENS_LENGTH 50
+#define TOKEN_LENGTH 50
 #define HISTORY_LENGTH 5
 
 #define INPUT_OK 0

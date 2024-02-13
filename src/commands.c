@@ -116,7 +116,7 @@ int extendCommand(Command *child, Command *parent) {
 }
 
 int createCommand(Command *command, char *input) {
-  char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
+  char **argv = malloc(sizeof(char) * TOKEN_LENGTH * TOKENS_LENGTH);
   int argc;
 
   _tokenise(argv, &argc, input);
@@ -154,7 +154,7 @@ int produceBuiltIn(Command **commands, int *argc) {
 
 Command *_createBuiltInCommand(char *input, int (*fn)(int, char **)) {
   int argc = 0;
-  char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
+  char **argv = malloc(sizeof(char) * TOKEN_LENGTH * TOKENS_LENGTH);
   Command *command = malloc(sizeof(Command));
 
   _tokenise(argv, &argc, input);
