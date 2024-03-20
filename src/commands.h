@@ -1,30 +1,32 @@
 #include "constants.h"
 
+
 #ifndef COMMANDS_H_
 #define COMMANDS_H_
 
-enum CommandType { BUILTIN, EXECUTE, ALIASES };
-
 struct Command {
-  char **tokens;
-  int length;
-  enum CommandType type;
-  union {
-    int (*fn)(int argc, char **argv);
+    enum {
+        BUILTIN,
+        EXECUTE,
+        ALIAS_COMMAND
+    } type;
+    int length;
+    char **tokens;
+    int (*fn)(int, char **, struct Command**, int*, struct Command**, int*, struct Command**, int*);
     struct Command *alias;
-  };
 };
 
 typedef struct Command Command;
 
+
 // Built-In commands -- private
-int exit_fn(int argc, char **argv);
-int chdir_fn(int argc, char **argv);
-int getpath_fn(int argc, char **argv);
-int setpath_fn(int argc, char **argv);
-int invoke_fn(int argc, char **argv);
-int alias_fn(int argc, char **argv);
-int unalias_fn(int argc, char **argv);
+int exit_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int chdir_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int getpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int setpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int invoke_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int unalias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
 // end
 
 // Produces an array of size argc, which contains all currently (hardcode)
@@ -40,7 +42,7 @@ int extendCommand(Command *child, Command *parent);
 Command *cmdChkExists(Command **commands, int argc, Command *command);
 
 // Executes any command for any type (alias, builtin, execute)
-int executeCommand(Command *command);
+int executeCommand(Command *command, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
 
 /* Note: This does not create a dynamically allocated pointer to command, only
    edits it. Computes a token arr and its length, and attaches it to the command
@@ -57,12 +59,8 @@ int freeCommands(Command **commands, int argc);
 int freeCommand(Command *command);
 
 // Returns a command assigned by input, private use only.
-Command *_createBuiltInCommand(char *input, int (*fn)(int argc, char **argv));
+Command *_createBuiltInCommand(char *input, int (*fn)(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC));
 
-/* Note: Writes to argv and argc.
- * Breaks input into tokens and places the "String"s inside of an array of
- * "String"s and the array's length in argc.
- * */
 int _tokenise(char **argv, int *argc, char *input);
 
 #endif // COMMANDS_H_

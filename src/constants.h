@@ -4,8 +4,8 @@
 // Please avoid changing them.
 #define COMMAND_LENGTH 512
 #define TOKENS_LENGTH 50
-#define TOKEN_LENGTH 50
 #define HISTORY_LENGTH 5
+#define ALIASES_LENGTH 10
 
 #define INPUT_OK 0
 #define INPUT_TERMINATE 1
@@ -13,4 +13,4 @@
 
 #define PATH_LENGTH 32767
 
-#define TOTAL_CMDS 4
+#define TOTAL_CMDS 5

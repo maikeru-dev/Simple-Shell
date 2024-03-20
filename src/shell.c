@@ -35,7 +35,11 @@ int main() {
   int loop = 1;
   char input[COMMAND_LENGTH];
   int builtInC = 0;
+  int aliasesC = 0;
+  int historyC = 0;
   Command **builtInCommands = malloc(sizeof(Command *) * TOTAL_CMDS);
+  Command **aliases = calloc(ALIASES_LENGTH, sizeof(Command *));
+  Command **history = calloc(HISTORY_LENGTH, sizeof(Command *));
   char *originalPath = getenv("PATH");
 
   char dir[100];
@@ -65,9 +69,12 @@ int main() {
 
     // If found a match, apply parent properties to child's, else do nothing.
     extendCommand(&command, cmdChkExists(builtInCommands, builtInC, &command));
+    
+    // If found an alias, apply parent
+    extendCommand(&command, cmdChkExists(aliases, aliasesC, &command));
 
     // Executes any command of any type.
-    executeCommand(&command);
+    executeCommand(&command, aliases, &aliasesC, history, &historyC, builtInCommands, &builtInC);
 
     // Free any malloc'd data.
     freeCommand(&command);
