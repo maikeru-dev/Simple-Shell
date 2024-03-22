@@ -202,7 +202,7 @@ int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** hi
     for (int i = 0; i < ALIASES_LENGTH; i++) {
         if (aliases[i] == NULL) {
             Command *alias = malloc(sizeof(Command));
-            createCommand(alias, argv[1]);
+            createCommand(alias, strdup(argv[1]));
             aliases[i] = alias;
             aliases[i]->type = ALIAS_COMMAND;
             aliases[i]->alias = command;
