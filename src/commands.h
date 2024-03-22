@@ -27,6 +27,7 @@ int setpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** 
 int invoke_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
 int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
 int unalias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
+int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC);
 // end
 
 // Produces an array of size argc, which contains all currently (hardcode)

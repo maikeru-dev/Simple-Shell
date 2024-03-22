@@ -155,6 +155,7 @@ int produceBuiltIn(Command **commands, int *argc) {
   commands[2] = _createBuiltInCommand("setpath", &setpath_fn);
   commands[3] = _createBuiltInCommand("cd", &chdir_fn);
   commands[4] = _createBuiltInCommand("alias", &alias_fn);
+  commands[5] = _createBuiltInCommand("printalias", &printAliases_fn);
   return 0;
 }
 
@@ -230,16 +231,31 @@ int unalias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** 
 }
 
 // Function to print all aliases
-int print_aliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-    int printed = 0;
-    for (int i = 0; i < TOTAL_CMDS; i++) {
-        //if (builtInCommands[i]->alias_name != NULL) {
-            //printf("%s: %s\n", builtInCommands[i]->alias_name, builtInCommands[i]->alias->tokens[0]);
-            printed++;
-        //}
+int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+    int head = 0;
+    int tail = ALIASES_LENGTH - 1;
+
+    while (head < ALIASES_LENGTH) {
+      printf("%s: ", aliases[head]);
+      printf("%s", aliases[head]);
+      printf("\n");
+      head += 1;
     }
-    if (printed == 0) {
-        //printf("No aliases set.\n");
-    }
-    return 0;
+    printf("%s: ", aliases[tail]);
+    printf("%s", aliases[tail]); // prints final line
+    printf("\n\n");
+    return 0; 
+    
+    
+        //if (builtInCommands[i]->alias != NULL) {
+            //printf("%s: %s\n", builtInCommands[i]->alias, builtInCommands[i]->alias->tokens[0]);
+    //         printed++;
+    //         return 0;
+    //     //}
+    // }
+    // if (printed == 0) {
+    //     printf("No aliases set.\n");
+    // }
+    // return 0;
 }
+

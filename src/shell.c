@@ -81,6 +81,7 @@ int main() {
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
+  
   freeCommands(builtInCommands, builtInC);
   quit();
   return 0;

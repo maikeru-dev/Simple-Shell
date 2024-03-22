@@ -13,4 +13,4 @@
 
 #define PATH_LENGTH 32767
 
-#define TOTAL_CMDS 5
+#define TOTAL_CMDS 6
