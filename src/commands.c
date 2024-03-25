@@ -53,7 +53,7 @@ int setpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** 
 }
 
 int executeCommand(Command *command, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-  printf("pointer %d", command);
+  printf("pointer %p", command);
   fflush(stdout);
   switch (command->type) {
   
@@ -206,7 +206,7 @@ int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** hi
             aliases[i] = alias;
             aliases[i]->type = ALIAS_COMMAND;
             aliases[i]->alias = command;
-            printf("pointer in alias: %d", command);
+            printf("pointer in alias: %p", command);
             (*aliasC)++;
             printf("Alias '%s' created.\n", argv[1]);
             return 0;
@@ -236,13 +236,13 @@ int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Comma
     int tail = ALIASES_LENGTH - 1;
 
     while (head < ALIASES_LENGTH) {
-      printf("%s: ", aliases[head]);
-      printf("%s", aliases[head]);
+      printf("%p: ", aliases[head]);
+      printf("%p", aliases[head]);
       printf("\n");
       head += 1;
     }
-    printf("%s: ", aliases[tail]);
-    printf("%s", aliases[tail]); // prints final line
+    printf("%p: ", aliases[tail]);
+    printf("%p", aliases[tail]); // prints final line
     printf("\n\n");
     return 0; 
     
@@ -258,4 +258,3 @@ int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Comma
     // }
     // return 0;
 }
-
