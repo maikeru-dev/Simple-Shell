@@ -57,39 +57,39 @@ int executeCommand(Command *command, Command** aliases, int* aliasC, Command** h
   fflush(stdout);
   switch (command->type) {
   
-  case BUILTIN:
-    printf("bad code: %s", command->tokens[0]);
-    fflush(stdout);
-    command->fn(command->length, command->tokens, aliases, aliasC, history, historyC, builtInCommands, builtInC);
-    break;
-  case EXECUTE:
-    // remember that when aliases occur, you must compile the arguments in case
-    // they are included.
-    {
-      pid_t pid = fork();
-      if (pid < 0) {
-        perror("No forking allowed apparently!");
-        return 1;
-      }
+    case BUILTIN:
+      printf("\nbad code: %s", command->tokens[0]);
+      fflush(stdout);
+      command->fn(command->length, command->tokens, aliases, aliasC, history, historyC, builtInCommands, builtInC);
+      break;
+    case EXECUTE:
+      // remember that when aliases occur, you must compile the arguments in case
+      // they are included.
+      {
+        pid_t pid = fork();
+        if (pid < 0) {
+          perror("No forking allowed apparently!");
+          return 1;
+        }
 
-      if (pid == 0) {
-        char *cmdCopy =
-            strdup(command->tokens[0]); // feel free to improve this name. this
-                                        // var is used to send an error back
-                                        // when execvp fails.
-        execvp(cmdCopy, command->tokens); // no need to check if it fails. it
-                                          // only comes back when it fails, as
-                                          // it exits on success.
-        perror(cmdCopy);
-        exit(0);
-      }
+        if (pid == 0) {
+          char *cmdCopy =
+              strdup(command->tokens[0]); // feel free to improve this name. this
+                                          // var is used to send an error back
+                                          // when execvp fails.
+          execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                            // only comes back when it fails, as
+                                            // it exits on success.
+          perror(cmdCopy);
+          exit(0);
+        }
 
-      wait(NULL);
-    }
-    break;
-  case ALIAS_COMMAND:
-    executeCommand(command->alias, aliases, aliasC, history, historyC, builtInCommands, builtInC);
-    break;
+        wait(NULL);
+      }
+      break;
+    case ALIAS_COMMAND:
+      executeCommand(command->alias, aliases, aliasC, history, historyC, builtInCommands, builtInC);
+      break;
   }
   return 0;
 }
@@ -189,6 +189,10 @@ int _tokenise(char **argv, int *argc, char *input) {
 
 // Function to handle alias command
 int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+    if (argc == 1) {
+        printAliases_fn(argc, argv, aliases, aliasC, history, historyC, builtInCommands, builtInC);
+        return 0;
+    }
     if (argc < 3) {
         printf("Usage: alias <name> <command>\n");
         return 1;
@@ -237,7 +241,7 @@ int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Comma
 
     while (head < ALIASES_LENGTH) {
       if (aliases[head] != NULL) {
-      printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
+        printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
       }
       head += 1;
     }

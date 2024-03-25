@@ -55,7 +55,7 @@ int main() {
     Command command;
     
     getcwd(dir,100);
-    printf("%s\n%s", dir, PROMPT);
+    printf("%s%s", dir, PROMPT);
 
     switch (getInput(input)) {
     case INPUT_TERMINATE:
