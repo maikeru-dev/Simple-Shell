@@ -206,7 +206,7 @@ int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** hi
             aliases[i] = alias;
             aliases[i]->type = ALIAS_COMMAND;
             aliases[i]->alias = command;
-            printf("pointer in alias: %p", command);
+            printf("pointer in alias: %p\n", command);
             (*aliasC)++;
             printf("Alias '%s' created.\n", argv[1]);
             return 0;
@@ -236,14 +236,12 @@ int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Comma
     int tail = ALIASES_LENGTH - 1;
 
     while (head < ALIASES_LENGTH) {
-      printf("%p: ", aliases[head]);
-      printf("%p", aliases[head]);
-      printf("\n");
+      if (aliases[head] != NULL) {
+      printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
+      }
       head += 1;
     }
-    printf("%p: ", aliases[tail]);
-    printf("%p", aliases[tail]); // prints final line
-    printf("\n\n");
+    printf("\n");
     return 0; 
     
     
