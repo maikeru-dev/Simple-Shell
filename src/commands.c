@@ -109,12 +109,20 @@ int freeCommands(Command **commands, int argc) {
 
   return 0;
 }
+int copyAlias(Command *child, Command *alias) {
+  child->tokens = malloc(sizeof(char) * TOKENS_LENGTH);
+  child->length = alias->length;
+  for (int i = 0; i < alias->length; i++) {
+    child->tokens[i] = strdup(alias->tokens[i]);
+  }
+}
 int extendCommand(Command *child, Command *parent) {
   if (child == parent)
     return 0;
   if (parent->type == ALIAS_COMMAND) {
-    child->alias = parent->alias;
+    
   }
+  child->alias = parent->alias;
   child->type = parent->type;
   child->fn = parent->fn;
 
