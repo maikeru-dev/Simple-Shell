@@ -155,7 +155,6 @@ int produceBuiltIn(Command **commands, int *argc) {
   commands[2] = _createBuiltInCommand("setpath", &setpath_fn);
   commands[3] = _createBuiltInCommand("cd", &chdir_fn);
   commands[4] = _createBuiltInCommand("alias", &alias_fn);
-  commands[5] = _createBuiltInCommand("printalias", &printAliases_fn);
   return 0;
 }
 
@@ -190,8 +189,16 @@ int _tokenise(char **argv, int *argc, char *input) {
 // Function to handle alias command
 int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
     if (argc == 1) {
-        printAliases_fn(argc, argv, aliases, aliasC, history, historyC, builtInCommands, builtInC);
-        return 0;
+        int head = 0;
+
+        while (head < ALIASES_LENGTH) {
+          if (aliases[head] != NULL) {
+            printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
+          }
+          head += 1;
+        }
+        printf("\n");
+        return 0; 
     }
     if (argc < 3) {
         printf("Usage: alias <name> <command>\n");
@@ -232,31 +239,4 @@ int unalias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** 
     }
     printf("Alias '%s' not found.\n", argv[1]);
     return 1;
-}
-
-// Function to print all aliases
-int printAliases_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-    int head = 0;
-    int tail = ALIASES_LENGTH - 1;
-
-    while (head < ALIASES_LENGTH) {
-      if (aliases[head] != NULL) {
-        printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
-      }
-      head += 1;
-    }
-    printf("\n");
-    return 0; 
-    
-    
-        //if (builtInCommands[i]->alias != NULL) {
-            //printf("%s: %s\n", builtInCommands[i]->alias, builtInCommands[i]->alias->tokens[0]);
-    //         printed++;
-    //         return 0;
-    //     //}
-    // }
-    // if (printed == 0) {
-    //     printf("No aliases set.\n");
-    // }
-    // return 0;
 }
