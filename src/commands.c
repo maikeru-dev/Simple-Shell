@@ -8,14 +8,18 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int exit_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+int exit_fn(int argc, char **argv, Command **aliases, int *aliasC,
+            Command **history, int *historyC, Command **builtInCommands,
+            int *builtInC) {
   (void)(argc); // supress unused warning
   (void)(argv);
   quit();
   return 0;
 }
 
-int chdir_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+int chdir_fn(int argc, char **argv, Command **aliases, int *aliasC,
+             Command **history, int *historyC, Command **builtInCommands,
+             int *builtInC) {
   argc--;
   if (argc > 1) {
     printf("cd: Too many arguments\n");
@@ -31,12 +35,16 @@ int chdir_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** hi
   return 0;
 }
 
-int getpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+int getpath_fn(int argc, char **argv, Command **aliases, int *aliasC,
+               Command **history, int *historyC, Command **builtInCommands,
+               int *builtInC) {
   printf("%s\n", getenv("PATH"));
   return 0;
 }
 
-int setpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
+int setpath_fn(int argc, char **argv, Command **aliases, int *aliasC,
+               Command **history, int *historyC, Command **builtInCommands,
+               int *builtInC) {
   argc--;
   if (argc > 1) {
     printf("setpath: Too many arguments\n");
@@ -51,45 +59,62 @@ int setpath_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** 
 
   return 0;
 }
+int pasteArguments(char **argvA, int argcA, char **argvB, int argcB) {
 
-int executeCommand(Command *command, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-  printf("pointer %p", command);
+  for (int i = argcA; i < argcA + argcB - 1; i++) {
+    argvA[i] = strdup(argvB[i - argcA + 1]);
+  }
+  argvA[argcA + argcB - 1] = NULL;
+  argcA = argcA + argcB;
+  return 0;
+}
+int executeCommand(Command *command, Command **aliases, int *aliasC,
+                   Command **history, int *historyC, Command **builtInCommands,
+                   int *builtInC) {
+  printf("pointer %p\n", command);
   fflush(stdout);
+
+  extendCommand(command, cmdChkExists(aliases, *aliasC, command));
   switch (command->type) {
-  
-    case BUILTIN:
-      printf("\nbad code: %s", command->tokens[0]);
-      fflush(stdout);
-      command->fn(command->length, command->tokens, aliases, aliasC, history, historyC, builtInCommands, builtInC);
-      break;
-    case EXECUTE:
-      // remember that when aliases occur, you must compile the arguments in case
-      // they are included.
-      {
-        pid_t pid = fork();
-        if (pid < 0) {
-          perror("No forking allowed apparently!");
-          return 1;
-        }
 
-        if (pid == 0) {
-          char *cmdCopy =
-              strdup(command->tokens[0]); // feel free to improve this name. this
-                                          // var is used to send an error back
-                                          // when execvp fails.
-          execvp(cmdCopy, command->tokens); // no need to check if it fails. it
-                                            // only comes back when it fails, as
-                                            // it exits on success.
-          perror(cmdCopy);
-          exit(0);
-        }
-
-        wait(NULL);
+  case BUILTIN:
+    printf("bad code: %s\n", command->tokens[0]);
+    fflush(stdout);
+    command->fn(command->length, command->tokens, aliases, aliasC, history,
+                historyC, builtInCommands, builtInC);
+    break;
+  case EXECUTE:
+    // remember that when aliases occur, you must compile the arguments in case
+    // they are included.
+    {
+      pid_t pid = fork();
+      if (pid < 0) {
+        perror("No forking allowed apparently!");
+        return 1;
       }
-      break;
-    case ALIAS_COMMAND:
-      executeCommand(command->alias, aliases, aliasC, history, historyC, builtInCommands, builtInC);
-      break;
+
+      if (pid == 0) {
+        char *cmdCopy =
+            strdup(command->tokens[0]); // feel free to improve this name. this
+                                        // var is used to send an error back
+                                        // when execvp fails.
+        execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                          // only comes back when it fails, as
+                                          // it exits on success.
+        perror(cmdCopy);
+        exit(0);
+      }
+
+      wait(NULL);
+    }
+    break;
+  case ALIAS_COMMAND:
+    pasteArguments(command->alias->tokens, command->alias->length,
+                   command->tokens, command->length);
+    printf("executing alias's child: %s\n", command->alias->tokens[0]);
+    executeCommand(command->alias, aliases, aliasC, history, historyC,
+                   builtInCommands, builtInC);
+    break;
   }
   return 0;
 }
@@ -109,20 +134,27 @@ int freeCommands(Command **commands, int argc) {
 
   return 0;
 }
+
 int copyAlias(Command *child, Command *alias) {
   child->tokens = malloc(sizeof(char) * TOKENS_LENGTH);
   child->length = alias->length;
+  child->type = alias->type;
+  child->fn = alias->fn;
   for (int i = 0; i < alias->length; i++) {
     child->tokens[i] = strdup(alias->tokens[i]);
   }
+
+  return 0;
 }
 int extendCommand(Command *child, Command *parent) {
   if (child == parent)
     return 0;
   if (parent->type == ALIAS_COMMAND) {
-    
+    child->alias = malloc(sizeof(Command));
+    printf("parent alias: %s, child's token: %s\n", parent->tokens[0],
+           parent->alias->tokens[0]);
+    copyAlias(child->alias, parent->alias);
   }
-  child->alias = parent->alias;
   child->type = parent->type;
   child->fn = parent->fn;
 
@@ -144,11 +176,11 @@ int createCommand(Command *command, char *input) {
 
 Command *cmdChkExists(Command **commands, int argc, Command *command) {
   for (int i = 0; i < argc; i++) {
-     //printf("%d %d ", commands, command);
-     //printf("thingy: %s", commands[i]->tokens[0]);
-     //fflush(stdout);
+    // printf("%d %d ", commands, command);
+    // printf("thingy: %s", commands[i]->tokens[0]);
+    // fflush(stdout);
     if (strcmp(commands[i]->tokens[0], command->tokens[0]) == 0) {
-       //printf("%s %s", commands[i]->tokens[0], command->tokens[0]);
+      // printf("%s %s", commands[i]->tokens[0], command->tokens[0]);
       return commands[i];
     }
   }
@@ -166,7 +198,9 @@ int produceBuiltIn(Command **commands, int *argc) {
   return 0;
 }
 
-Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command**, int*, Command**, int*, Command**, int*)) {
+Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
+                                                      int *, Command **, int *,
+                                                      Command **, int *)) {
   int argc = 0;
   char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
   Command *command = malloc(sizeof(Command));
@@ -195,56 +229,60 @@ int _tokenise(char **argv, int *argc, char *input) {
 }
 
 // Function to handle alias command
-int alias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-    if (argc == 1) {
-        int head = 0;
+int alias_fn(int argc, char **argv, Command **aliases, int *aliasC,
+             Command **history, int *historyC, Command **builtInCommands,
+             int *builtInC) {
+  if (argc == 1) {
+    int head = 0;
 
-        while (head < ALIASES_LENGTH) {
-          if (aliases[head] != NULL) {
-            printf("\n%s: %s", aliases[head]->tokens[0], aliases[head]->alias->tokens[0]);
-          }
-          head += 1;
-        }
-        printf("\n");
-        return 0; 
+    while (head < ALIASES_LENGTH) {
+      if (aliases[head] != NULL) {
+        printf("\n%s: %s", aliases[head]->tokens[0],
+               aliases[head]->alias->tokens[0]);
+      }
+      head += 1;
     }
-    if (argc < 3) {
-        printf("Usage: alias <name> <command>\n");
-        return 1;
-    }
-    Command *command = malloc(sizeof(Command));
-    createCommand(command, strdup(argv[2])); //TODO: make this support arguments
-    // Search for an existing alias with the same name
-    extendCommand(command, cmdChkExists(builtInCommands, *builtInC, command));
-
-    // create new alias using free space
-    for (int i = 0; i < ALIASES_LENGTH; i++) {
-        if (aliases[i] == NULL) {
-            Command *alias = malloc(sizeof(Command));
-            createCommand(alias, strdup(argv[1]));
-            aliases[i] = alias;
-            aliases[i]->type = ALIAS_COMMAND;
-            aliases[i]->alias = command;
-            printf("pointer in alias: %p\n", command);
-            (*aliasC)++;
-            printf("Alias '%s' created.\n", argv[1]);
-            return 0;
-        }
-    }
-    printf("No more aliases can be set. Maximum limit reached.\n");
+    printf("\n");
+    return 0;
+  }
+  if (argc < 3) {
+    printf("Usage: alias <name> <command>\n");
     return 1;
+  }
+  Command *command = malloc(sizeof(Command));
+  createCommand(command, strdup(argv[2])); // TODO: make this support arguments
+  // Search for an existing alias with the same name
+  extendCommand(command, cmdChkExists(builtInCommands, *builtInC, command));
+
+  // create new alias using free space
+  for (int i = 0; i < ALIASES_LENGTH; i++) {
+    if (aliases[i] == NULL) {
+      Command *alias = malloc(sizeof(Command));
+      createCommand(alias, strdup(argv[1]));
+      aliases[i] = alias;
+      aliases[i]->type = ALIAS_COMMAND;
+      aliases[i]->alias = command;
+      printf("pointer in alias: %p\n", command);
+      (*aliasC)++;
+      printf("Alias '%s' created.\n", argv[1]);
+      return 0;
+    }
+  }
+  printf("No more aliases can be set. Maximum limit reached.\n");
+  return 1;
 }
 
 // Function to handle unalias command
-int unalias_fn(int argc, char **argv, Command** aliases, int* aliasC, Command** history, int* historyC, Command **builtInCommands, int* builtInC) {
-    if (argc < 2) {
-        //printf("Usage: unalias <name>\n");
-        return 1;
-    }
-
-    for (int i = 0; i < TOTAL_CMDS; i++) {
-        
-    }
-    printf("Alias '%s' not found.\n", argv[1]);
+int unalias_fn(int argc, char **argv, Command **aliases, int *aliasC,
+               Command **history, int *historyC, Command **builtInCommands,
+               int *builtInC) {
+  if (argc < 2) {
+    // printf("Usage: unalias <name>\n");
     return 1;
+  }
+
+  for (int i = 0; i < TOTAL_CMDS; i++) {
+  }
+  printf("Alias '%s' not found.\n", argv[1]);
+  return 1;
 }

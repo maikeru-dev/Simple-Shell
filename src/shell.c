@@ -43,7 +43,7 @@ int main() {
   char *originalPath = getenv("PATH");
 
   char dir[100];
-  getcwd(dir,100);
+  getcwd(dir, 100);
 
   chdir(dir);
   produceBuiltIn(builtInCommands, &builtInC);
@@ -53,8 +53,8 @@ int main() {
      * mallocd/const members must be duplicated, if you do not duplicate them,
      * expect unexpected runtime bugs. */
     Command command;
-    
-    getcwd(dir,100);
+
+    getcwd(dir, 100);
     printf("%s%s", dir, PROMPT);
 
     switch (getInput(input)) {
@@ -69,19 +69,20 @@ int main() {
 
     // If found a match, apply parent properties to child's, else do nothing.
     extendCommand(&command, cmdChkExists(builtInCommands, builtInC, &command));
-    
+
     // If found an alias, apply parent
-    extendCommand(&command, cmdChkExists(aliases, aliasesC, &command));
+    // REMOVED TO executeCommand;
 
     // Executes any command of any type.
-    executeCommand(&command, aliases, &aliasesC, history, &historyC, builtInCommands, &builtInC);
+    executeCommand(&command, aliases, &aliasesC, history, &historyC,
+                   builtInCommands, &builtInC);
 
     // Free any malloc'd data.
     freeCommand(&command);
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
-  
+
   freeCommands(builtInCommands, builtInC);
   quit();
   return 0;
