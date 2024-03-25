@@ -6,6 +6,7 @@
 #define TOKENS_LENGTH 50
 #define HISTORY_LENGTH 5
 #define ALIASES_LENGTH 10
+#define WORD_LENGTH 16
 
 #define INPUT_OK 0
 #define INPUT_TERMINATE 1
@@ -13,4 +14,4 @@
 
 #define PATH_LENGTH 32767
 
-#define TOTAL_CMDS 5
+#define TOTAL_CMDS 6

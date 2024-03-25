@@ -7,6 +7,21 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+int invoke_fn(int argc, char **argv, Command **aliases, int *aliasC,
+              Command **history, int *historyC, Command **builtInCommands,
+              int *builtInC) {
+  if (argc == 1) {
+    for (int i = 0; i < *historyC; i++) {
+      if (history[i] != NULL) {
+
+        printf("\n%d: %s", i, history[i]->tokens[0]);
+      }
+    }
+    printf("\n");
+  }
+
+  return 0;
+}
 
 int exit_fn(int argc, char **argv, Command **aliases, int *aliasC,
             Command **history, int *historyC, Command **builtInCommands,
@@ -59,26 +74,41 @@ int setpath_fn(int argc, char **argv, Command **aliases, int *aliasC,
 
   return 0;
 }
-int pasteArguments(char **argvA, int argcA, char **argvB, int argcB) {
+int pasteOffsetArguments(Command *child, Command *parent,
 
-  for (int i = argcA; i < argcA + argcB - 1; i++) {
-    argvA[i] = strdup(argvB[i - argcA + 1]);
+                         int offset) {
+  char **argvC = calloc(child->length + parent->length, sizeof(char *));
+  for (int i = 0; i < child->length; i++) {
+    argvC[i] = child->tokens[i];
   }
-  argvA[argcA + argcB - 1] = NULL;
-  argcA = argcA + argcB;
+  for (int i = child->length; i < child->length + parent->length - 1; i++) {
+    argvC[i] = strdup(parent->tokens[i - child->length + 1]);
+  }
+
+  free(child->tokens);
+  child->tokens = argvC;
+  child->length += parent->length - 1;
+  child->tokens[child->length] = NULL;
+
+  // printf("new length: %d\nnew array: ", cmdA->length);
+  //
+  // for (int i = 0; i < cmdA->length; i++) {
+  //   printf("%s, ", cmdA->tokens[i]);
+  // }
+  // printf("\n");
   return 0;
 }
 int executeCommand(Command *command, Command **aliases, int *aliasC,
                    Command **history, int *historyC, Command **builtInCommands,
                    int *builtInC) {
   printf("pointer %p\n", command);
+  printf("bad code: %s %d\n", command->tokens[0], command->length);
   fflush(stdout);
 
   extendCommand(command, cmdChkExists(aliases, *aliasC, command));
   switch (command->type) {
 
   case BUILTIN:
-    printf("bad code: %s\n", command->tokens[0]);
     fflush(stdout);
     command->fn(command->length, command->tokens, aliases, aliasC, history,
                 historyC, builtInCommands, builtInC);
@@ -109,8 +139,7 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
     }
     break;
   case ALIAS_COMMAND:
-    pasteArguments(command->alias->tokens, command->alias->length,
-                   command->tokens, command->length);
+    pasteOffsetArguments(command->alias, command, 0);
     printf("executing alias's child: %s\n", command->alias->tokens[0]);
     executeCommand(command->alias, aliases, aliasC, history, historyC,
                    builtInCommands, builtInC);
@@ -120,13 +149,21 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
 }
 
 int freeCommand(Command *command) {
+  for (int i = 0; i < command->length; i++) {
+    free(command->tokens[i]);
+  }
   free(command->tokens);
-  command = 0;
+  if (command->type == ALIAS_COMMAND) {
+    freeCommand(command->alias);
+  }
+
   return 0;
 }
 
 int freeCommands(Command **commands, int argc) {
   for (int i = 0; i < argc; i++) {
+    if (commands[i] == NULL)
+      continue;
     freeCommand(commands[i]);
     free(commands[i]);
   }
@@ -135,16 +172,16 @@ int freeCommands(Command **commands, int argc) {
   return 0;
 }
 
-int copyAlias(Command *child, Command *alias) {
-  child->tokens = malloc(sizeof(char) * TOKENS_LENGTH);
-  child->length = alias->length;
-  child->type = alias->type;
-  child->fn = alias->fn;
-  for (int i = 0; i < alias->length; i++) {
-    child->tokens[i] = strdup(alias->tokens[i]);
+Command *copyCommand(Command *child, Command *parent) {
+  child->tokens = calloc(parent->length, sizeof(char *));
+  child->length = parent->length;
+  child->type = parent->type;
+  child->fn = parent->fn;
+  for (int i = 0; i < parent->length; i++) {
+    child->tokens[i] = strdup(parent->tokens[i]);
   }
 
-  return 0;
+  return child;
 }
 int extendCommand(Command *child, Command *parent) {
   if (child == parent)
@@ -153,7 +190,7 @@ int extendCommand(Command *child, Command *parent) {
     child->alias = malloc(sizeof(Command));
     printf("parent alias: %s, child's token: %s\n", parent->tokens[0],
            parent->alias->tokens[0]);
-    copyAlias(child->alias, parent->alias);
+    copyCommand(child->alias, parent->alias);
   }
   child->type = parent->type;
   child->fn = parent->fn;
@@ -162,11 +199,12 @@ int extendCommand(Command *child, Command *parent) {
 }
 
 int createCommand(Command *command, char *input) {
-  char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
+  char **argv = calloc(TOKENS_LENGTH, sizeof(char *));
   int argc;
 
   _tokenise(argv, &argc, input);
 
+  command->fullCommand = input;
   command->type = EXECUTE;
   command->tokens = argv;
   command->length = argc;
@@ -195,6 +233,7 @@ int produceBuiltIn(Command **commands, int *argc) {
   commands[2] = _createBuiltInCommand("setpath", &setpath_fn);
   commands[3] = _createBuiltInCommand("cd", &chdir_fn);
   commands[4] = _createBuiltInCommand("alias", &alias_fn);
+  commands[5] = _createBuiltInCommand("history", &invoke_fn);
   return 0;
 }
 
@@ -202,10 +241,13 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
                                                       int *, Command **, int *,
                                                       Command **, int *)) {
   int argc = 0;
-  char **argv = malloc(sizeof(char) * TOKENS_LENGTH);
+  char **argv = malloc(sizeof(char *));
   Command *command = malloc(sizeof(Command));
 
-  _tokenise(argv, &argc, input);
+  //_tokenise(argv, &argc, input);
+  argv[0] = input;
+  command->tokens = argv;
+  command->fullCommand = input;
   command->type = BUILTIN;
   command->fn = fn;
   command->length = argc; // we don't actually need to care about the length,
@@ -220,11 +262,13 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
 // supported (in this branch..?)
 int _tokenise(char **argv, int *argc, char *input) {
   *argc = 0;
-  argv[*argc] = strtok(input, " \n");
+  char *dummy = strtok(input, " \n");
   do {
+    printf("tokenising\n");
+    argv[*argc] = strdup(dummy);
+    dummy = strtok(NULL, " \n");
     (*argc)++;
-    argv[*argc] = strtok(NULL, " \n");
-  } while (argv[*argc] != NULL);
+  } while (dummy != NULL);
   return 0;
 }
 
@@ -285,4 +329,19 @@ int unalias_fn(int argc, char **argv, Command **aliases, int *aliasC,
   }
   printf("Alias '%s' not found.\n", argv[1]);
   return 1;
+}
+
+int saveCommands(char *filepath, Command **commands, int argc) {
+  FILE *file = fopen(filepath, "w");
+  if (file == NULL) {
+    return 1;
+  }
+
+  for (int i = 0; i < argc; i++) {
+    fputs(commands[argc]->fullCommand, file);
+    fputs("\n", file);
+  }
+
+  fclose(file);
+  return 0;
 }

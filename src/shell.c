@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "commands.h"
+#include "history.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,19 +71,35 @@ int main() {
     // If found a match, apply parent properties to child's, else do nothing.
     extendCommand(&command, cmdChkExists(builtInCommands, builtInC, &command));
 
-    // If found an alias, apply parent
-    // REMOVED TO executeCommand;
+    // Use O(1) to find history invocation.
+    {
+      int numIndex;
+      if ((numIndex = validateHistory(history, historyC, &command)) != 0) {
+
+        extendCommand(&command, history[numIndex]);
+      }
+    }
 
     // Executes any command of any type.
     executeCommand(&command, aliases, &aliasesC, history, &historyC,
                    builtInCommands, &builtInC);
 
-    // Free any malloc'd data.
+    if (historyC == HISTORY_LENGTH) {
+      freeCommand(history[0]);
+      free(history[0]);
+      shuntPtrArr(history, &historyC);
+      history[historyC] = copyCommand(malloc(sizeof(Command)), &command);
+    } else {
+      history[historyC] = copyCommand(malloc(sizeof(Command)), &command);
+      historyC++;
+    }
+
     freeCommand(&command);
   }
 
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
 
+  freeCommands(history, historyC);
   freeCommands(builtInCommands, builtInC);
   quit();
   return 0;
