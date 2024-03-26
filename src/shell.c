@@ -47,7 +47,7 @@ int main() {
   char dir[100];
   getcwd(dir, 100);
 
-  chdir(dir);
+  chdir(getenv("HOME"));
   produceBuiltIn(builtInCommands, &builtInC);
 
   while (loop) {
@@ -110,6 +110,7 @@ int main() {
     freeCommand(&command);
   }
 
+  chdir(dir);
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
 
   freeCommands(history, historyC);
