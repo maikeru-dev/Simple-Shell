@@ -42,25 +42,41 @@ int getNumberHistory(char *input, int length) {
 }
 
 int validateHistory(Command **history, int historyC, Command *command) {
-  if (command->tokens[0][0] != '!') {
-    return 0;
-  }
+
   int size = getSize(command->fullCommand);
   int numIndex;
-  if (size == 1) {
-    numIndex = 1;
-  } else {
+  printf("Command length: %d\n", size);
+  if (size >= 2) {
     // TODO: Expect other formats.
-    numIndex = getNumberHistory(&command->tokens[0][0], size);
-    if (numIndex == 0) {
-      printf("Usage: !<num> | !\n");
-      return 0;
+    switch (command->tokens[0][1]) {
+    case '-':
+      numIndex = historyC - getNumberHistory(&command->tokens[0][0], size);
+      if (numIndex == 0) {
+        printf("Usage: !<num> | !\n");
+        return -1;
+      }
+      break;
+    case '!':
+      numIndex = historyC;
+      break;
+
+    default:
+      numIndex = getNumberHistory(&command->tokens[0][0], size);
+      if (numIndex == 0) {
+        printf("Usage: !<num> | !\n");
+        return -1;
+      }
+      break;
     }
+  } else {
+    printf("Usage: !<num> | !! | !-<num>\n");
   }
 
-  if (history[numIndex] == NULL) {
+  if (history[numIndex - 1] == NULL) {
     printf("Processed index %d but invalid history invocation.\n", numIndex);
-    return 0;
+    return -1;
+  } else {
+    printf("Found correct index %d\n", numIndex);
   }
 
   return numIndex;

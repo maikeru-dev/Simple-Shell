@@ -34,6 +34,7 @@ void quit() {
 
 int main() {
   int loop = 1;
+  int historyFlag = 1;
   char input[COMMAND_LENGTH];
   int builtInC = 0;
   int aliasesC = 0;
@@ -72,12 +73,15 @@ int main() {
     extendCommand(&command, cmdChkExists(builtInCommands, builtInC, &command));
 
     // Use O(1) to find history invocation.
-    {
+
+    if (command.tokens[0][0] == '!') {
+
       int numIndex;
-
-      if ((numIndex = validateHistory(history, historyC, &command)) != 0) {
-
-        extendCommand(&command, history[numIndex]);
+      historyFlag = 1;
+      if ((numIndex = validateHistory(history, historyC, &command)) > 0) {
+        printf("index: %d\n", numIndex);
+        freeCommand(&command);
+        copyCommand(&command, history[numIndex - 1]);
       }
     }
 
@@ -85,17 +89,22 @@ int main() {
     executeCommand(&command, aliases, &aliasesC, history, &historyC,
                    builtInCommands, &builtInC);
 
-    if (historyC >= HISTORY_LENGTH - 1) {
-      freeCommand(history[0]);
-      free(history[0]);
-      for (int i = 0; i < historyC - 1; i++) {
-        history[i] = history[i + 1];
+    if (historyFlag == 0) {
+      if (historyC >= HISTORY_LENGTH - 1) {
+        freeCommand(history[0]);
+        free(history[0]);
+        for (int i = 0; i < historyC - 1; i++) {
+          history[i] = history[i + 1];
+        }
+        history[historyC - 1] = NULL;
+        history[historyC - 1] =
+            copyCommand(calloc(1, sizeof(Command)), &command);
+      } else {
+        history[historyC] = copyCommand(calloc(1, sizeof(Command)), &command);
+        historyC++;
       }
-      history[historyC - 1] = NULL;
-      history[historyC - 1] = copyCommand(calloc(1, sizeof(Command)), &command);
     } else {
-      history[historyC] = copyCommand(calloc(1, sizeof(Command)), &command);
-      historyC++;
+      historyFlag = 0;
     }
 
     freeCommand(&command);
