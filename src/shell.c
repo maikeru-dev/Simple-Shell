@@ -44,8 +44,9 @@ int main() {
   Command **history = calloc(HISTORY_LENGTH, sizeof(Command *));
   char *originalPath = getenv("PATH");
 
+  char lastDir[100];
   char dir[100];
-  getcwd(dir, 100);
+  getcwd(lastDir, 100);
 
   chdir(getenv("HOME"));
   produceBuiltIn(builtInCommands, &builtInC);
@@ -79,7 +80,6 @@ int main() {
       int numIndex;
       historyFlag = 1;
       if ((numIndex = validateHistory(history, historyC, &command)) > 0) {
-        printf("index: %d\n", numIndex);
         freeCommand(&command);
         copyCommand(&command, history[numIndex - 1]);
       }
@@ -112,7 +112,7 @@ int main() {
 
   chdir(dir);
   setenv("PATH", originalPath, 1); // Replace PATH with the saved one
-
+  // saveCommands(strcat(lastDir, "/.hist_list"), history, historyC);
   freeCommands(history, historyC);
   freeCommands(builtInCommands, builtInC);
   quit();

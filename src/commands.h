@@ -72,6 +72,8 @@ Command *copyCommand(Command *child, Command *parent);
  * */
 int freeCommand(Command *command);
 
+int saveAliases(char *filepath, Command **commands, int argc);
+int saveCommands(char *filepath, Command **commands, int argc);
 // Returns a command assigned by input, private use only.
 Command *
 _createBuiltInCommand(char *input,

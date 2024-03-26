@@ -115,10 +115,6 @@ int pasteOffsetArguments(Command *child, Command *parent, int offset) {
 int executeCommand(Command *command, Command **aliases, int *aliasC,
                    Command **history, int *historyC, Command **builtInCommands,
                    int *builtInC) {
-  printf("pointer %p\n", command);
-  printf("bad code: %s %d\n", command->tokens[0], command->length);
-  fflush(stdout);
-
   extendCommand(command, cmdChkExists(aliases, *aliasC, command));
 
   switch (command->type) {
@@ -156,7 +152,6 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
 
   case ALIAS_COMMAND:
     pasteOffsetArguments(command->alias, command, 0);
-    printf("executing alias's child: %s\n", command->alias->tokens[0]);
     executeCommand(command->alias, aliases, aliasC, history, historyC,
                    builtInCommands, builtInC);
     break;
@@ -170,6 +165,7 @@ int freeCommand(Command *command) {
     free(command->tokens[i]);
   }
 
+  free(command->fullCommand);
   free(command->tokens);
   if (command->type == ALIAS_COMMAND) {
     freeCommand(command->alias);
@@ -196,6 +192,7 @@ Command *copyCommand(Command *child, Command *parent) {
   child->length = parent->length;
   child->type = parent->type;
   child->fn = parent->fn;
+  child->fullCommand = strdup(parent->fullCommand);
 
   for (int i = 0; i < parent->length; i++) {
     child->tokens[i] = strdup(parent->tokens[i]);
@@ -210,8 +207,6 @@ int extendCommand(Command *child, Command *parent) {
 
   if (parent->type == ALIAS_COMMAND) {
     child->alias = malloc(sizeof(Command));
-    printf("parent alias: %s, child's token: %s\n", parent->tokens[0],
-           parent->alias->tokens[0]);
     copyCommand(child->alias, parent->alias);
   }
 
@@ -227,7 +222,7 @@ int createCommand(Command *command, char *input) {
 
   _tokenise(argv, &argc, input);
 
-  command->fullCommand = input;
+  command->fullCommand = strdup(input);
   command->type = EXECUTE;
   command->tokens = argv;
   command->length = argc;
@@ -270,7 +265,7 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
   //_tokenise(argv, &argc, input);
   argv[0] = input;
   command->tokens = argv;
-  command->fullCommand = input;
+  command->fullCommand = strdup(input);
   command->type = BUILTIN;
   command->fn = fn;
   command->length = argc; // we don't actually need to care about the length,
@@ -333,7 +328,6 @@ int alias_fn(int argc, char **argv, Command **aliases, int *aliasC,
       aliases[i] = alias;
       aliases[i]->type = ALIAS_COMMAND;
       aliases[i]->alias = command;
-      printf("pointer in alias: %p\n", command);
       (*aliasC)++;
       printf("Alias '%s' created.\n", argv[1]);
       return 0;
@@ -360,7 +354,7 @@ int unalias_fn(int argc, char **argv, Command **aliases, int *aliasC,
   return 1;
 }
 
-int saveCommands(char *filepath, Command **commands, int argc) {
+int saveAliases(char *filepath, Command **commands, int argc) {
   FILE *file = fopen(filepath, "w");
   if (file == NULL) {
     return 1;
@@ -368,6 +362,21 @@ int saveCommands(char *filepath, Command **commands, int argc) {
 
   for (int i = 0; i < argc; i++) {
     fputs(commands[argc]->fullCommand, file);
+    fputs("\n", file);
+  }
+
+  fclose(file);
+  return 0;
+}
+
+int saveCommands(char *filepath, Command **commands, int argc) {
+  FILE *file = fopen(filepath, "w");
+  if (file == NULL) {
+    return 1;
+  }
+
+  for (int i = 0; i < argc; i++) {
+    fputs(commands[i]->fullCommand, file);
     fputs("\n", file);
   }
 
