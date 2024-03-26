@@ -7,11 +7,14 @@
 int shuntPtrArr(Command **arr, int argc) {
   // size: 5, assume arr is full
   // i: 0 is removed, i:5 is now null.
+  //
 
-  arr[0] = 0;
   for (int i = 0; i < argc - 1; i++) {
     arr[i] = arr[i + 1];
   }
+
+  arr[argc - 1] = NULL;
+
   return 0;
 }
 

@@ -4,7 +4,7 @@
 // Please avoid changing them.
 #define COMMAND_LENGTH 512
 #define TOKENS_LENGTH 50
-#define HISTORY_LENGTH 5
+#define HISTORY_LENGTH 6 // 5 technically.
 #define ALIASES_LENGTH 10
 #define WORD_LENGTH 16
 

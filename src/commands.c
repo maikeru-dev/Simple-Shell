@@ -8,14 +8,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-
 int invoke_fn(int argc, char **argv, Command **aliases, int *aliasC,
               Command **history, int *historyC, Command **builtInCommands,
               int *builtInC) {
   if (argc == 1) {
     for (int i = 0; i < *historyC; i++) {
       if (history[i] != NULL) {
-        printf("\n%d: %s", i, history[i]->tokens[0]);
+        printf("\n%d: %s", i + 1, history[i]->tokens[0]);
+      } else {
+        printf("\n%d: (null)", i + 1);
       }
     }
     printf("\n");
@@ -112,43 +113,44 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
   extendCommand(command, cmdChkExists(aliases, *aliasC, command));
 
   switch (command->type) {
-    case BUILTIN:
-      fflush(stdout);
-      command->fn(command->length, command->tokens, aliases, aliasC, history,
-                  historyC, builtInCommands, builtInC);
-      break;
+  case BUILTIN:
+    fflush(stdout);
+    command->fn(command->length, command->tokens, aliases, aliasC, history,
+                historyC, builtInCommands, builtInC);
+    break;
 
-    case EXECUTE:
-      // remember that when aliases occur, you must compile the arguments in case
-      // they are included.
-      {
-        pid_t pid = fork();
-        if (pid < 0) {
-          perror("No forking allowed apparently!");
-          return 1;
-        }
-
-          if (pid == 0) {
-            char *cmdCopy = strdup(command->tokens[0]); // feel free to improve this name. this
-                                                        // var is used to send an error back
-                                                        // when execvp fails.
-            execvp(cmdCopy, command->tokens); // no need to check if it fails. it
-                                              // only comes back when it fails, as
-                                              // it exits on success.
-            perror(cmdCopy);
-            exit(0);
-          }
-
-        wait(NULL);
+  case EXECUTE:
+    // remember that when aliases occur, you must compile the arguments in case
+    // they are included.
+    {
+      pid_t pid = fork();
+      if (pid < 0) {
+        perror("No forking allowed apparently!");
+        return 1;
       }
-      break;
 
-    case ALIAS_COMMAND:
-      pasteOffsetArguments(command->alias, command, 0);
-      printf("executing alias's child: %s\n", command->alias->tokens[0]);
-      executeCommand(command->alias, aliases, aliasC, history, historyC,
-                    builtInCommands, builtInC);
-      break;
+      if (pid == 0) {
+        char *cmdCopy =
+            strdup(command->tokens[0]); // feel free to improve this name. this
+                                        // var is used to send an error back
+                                        // when execvp fails.
+        execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                          // only comes back when it fails, as
+                                          // it exits on success.
+        perror(cmdCopy);
+        exit(0);
+      }
+
+      wait(NULL);
+    }
+    break;
+
+  case ALIAS_COMMAND:
+    pasteOffsetArguments(command->alias, command, 0);
+    printf("executing alias's child: %s\n", command->alias->tokens[0]);
+    executeCommand(command->alias, aliases, aliasC, history, historyC,
+                   builtInCommands, builtInC);
+    break;
   }
 
   return 0;
@@ -169,7 +171,8 @@ int freeCommand(Command *command) {
 
 int freeCommands(Command **commands, int argc) {
   for (int i = 0; i < argc; i++) {
-    if (commands[i] == NULL) continue;
+    if (commands[i] == NULL)
+      continue;
 
     freeCommand(commands[i]);
     free(commands[i]);
@@ -193,7 +196,8 @@ Command *copyCommand(Command *child, Command *parent) {
 }
 
 int extendCommand(Command *child, Command *parent) {
-  if (child == parent) return 0;
+  if (child == parent)
+    return 0;
 
   if (parent->type == ALIAS_COMMAND) {
     child->alias = malloc(sizeof(Command));
@@ -342,7 +346,6 @@ int unalias_fn(int argc, char **argv, Command **aliases, int *aliasC,
   }
 
   for (int i = 0; i < TOTAL_CMDS; i++) {
-    
   }
 
   printf("Alias '%s' not found.\n", argv[1]);

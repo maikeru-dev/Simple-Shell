@@ -74,6 +74,7 @@ int main() {
     // Use O(1) to find history invocation.
     {
       int numIndex;
+
       if ((numIndex = validateHistory(history, historyC, &command)) != 0) {
 
         extendCommand(&command, history[numIndex]);
@@ -84,13 +85,16 @@ int main() {
     executeCommand(&command, aliases, &aliasesC, history, &historyC,
                    builtInCommands, &builtInC);
 
-    if (historyC == HISTORY_LENGTH) {
+    if (historyC >= HISTORY_LENGTH - 1) {
       freeCommand(history[0]);
       free(history[0]);
-      shuntPtrArr(history, &historyC);
-      history[historyC] = copyCommand(malloc(sizeof(Command)), &command);
+      for (int i = 0; i < historyC - 1; i++) {
+        history[i] = history[i + 1];
+      }
+      history[historyC - 1] = NULL;
+      history[historyC - 1] = copyCommand(calloc(1, sizeof(Command)), &command);
     } else {
-      history[historyC] = copyCommand(malloc(sizeof(Command)), &command);
+      history[historyC] = copyCommand(calloc(1, sizeof(Command)), &command);
       historyC++;
     }
 
