@@ -6,7 +6,10 @@
 #define TOKENS_LENGTH 50
 #define HISTORY_LENGTH 6 // 5 technically.
 #define ALIASES_LENGTH 10
-#define WORD_LENGTH 16
+
+// Our definitions:
+#define WORD_LENGTH 16 // I don't think this is used.
+#define TOKENISER " \n|><&;\t"
 
 #define INPUT_OK 0
 #define INPUT_TERMINATE 1

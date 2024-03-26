@@ -1,6 +1,7 @@
 #include "commands.h"
 #include "constants.h"
 #include "shell.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,17 +39,25 @@ int chdir_fn(int argc, char **argv, Command **aliases, int *aliasC,
              Command **history, int *historyC, Command **builtInCommands,
              int *builtInC) {
   argc--;
+  if (argc == 0) {
+    chdir(getenv("HOME"));
+    return 1;
+  }
+
   if (argc > 1) {
-    printf("cd: Too many arguments\n");
+    perror("cd: Too many arguments\n");
     return 1;
   }
 
   if (argc < 1) {
-    printf("cd: No arguments provided\n");
+    perror("cd: No arguments provided\n");
     return 1;
   }
 
-  chdir(argv[1]);
+  if (chdir(argv[1]) != 0) {
+    fprintf(stderr, "cd: %s\n", strerror(errno));
+    return 1;
+  }
 
   return 0;
 }
@@ -276,12 +285,11 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
 // supported (in this branch..?)
 int _tokenise(char **argv, int *argc, char *input) {
   *argc = 0;
-  char *dummy = strtok(input, " \n");
+  char *dummy = strtok(input, TOKENISER);
 
   do {
-    printf("tokenising\n");
     argv[*argc] = strdup(dummy);
-    dummy = strtok(NULL, " \n");
+    dummy = strtok(NULL, TOKENISER);
     (*argc)++;
   } while (dummy != NULL);
 
