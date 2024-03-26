@@ -98,6 +98,7 @@ int pasteOffsetArguments(Command *child, Command *parent,
   // printf("\n");
   return 0;
 }
+
 int executeCommand(Command *command, Command **aliases, int *aliasC,
                    Command **history, int *historyC, Command **builtInCommands,
                    int *builtInC) {
@@ -106,6 +107,7 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
   fflush(stdout);
 
   extendCommand(command, cmdChkExists(aliases, *aliasC, command));
+
   switch (command->type) {
 
   case BUILTIN:
@@ -123,17 +125,16 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
         return 1;
       }
 
-      if (pid == 0) {
-        char *cmdCopy =
-            strdup(command->tokens[0]); // feel free to improve this name. this
-                                        // var is used to send an error back
-                                        // when execvp fails.
-        execvp(cmdCopy, command->tokens); // no need to check if it fails. it
-                                          // only comes back when it fails, as
-                                          // it exits on success.
-        perror(cmdCopy);
-        exit(0);
-      }
+        if (pid == 0) {
+          char *cmdCopy = strdup(command->tokens[0]); // feel free to improve this name. this
+                                                      // var is used to send an error back
+                                                      // when execvp fails.
+          execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                            // only comes back when it fails, as
+                                            // it exits on success.
+          perror(cmdCopy);
+          exit(0);
+        }
 
       wait(NULL);
     }
@@ -145,6 +146,7 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
                    builtInCommands, builtInC);
     break;
   }
+
   return 0;
 }
 
@@ -167,8 +169,8 @@ int freeCommands(Command **commands, int argc) {
     freeCommand(commands[i]);
     free(commands[i]);
   }
-  free(commands);
 
+  free(commands);
   return 0;
 }
 
@@ -184,14 +186,15 @@ Command *copyCommand(Command *child, Command *parent) {
   return child;
 }
 int extendCommand(Command *child, Command *parent) {
-  if (child == parent)
-    return 0;
+  if (child == parent) return 0;
+
   if (parent->type == ALIAS_COMMAND) {
     child->alias = malloc(sizeof(Command));
     printf("parent alias: %s, child's token: %s\n", parent->tokens[0],
            parent->alias->tokens[0]);
     copyCommand(child->alias, parent->alias);
   }
+
   child->type = parent->type;
   child->fn = parent->fn;
 
@@ -289,10 +292,12 @@ int alias_fn(int argc, char **argv, Command **aliases, int *aliasC,
     printf("\n");
     return 0;
   }
+
   if (argc < 3) {
     printf("Usage: alias <name> <command>\n");
     return 1;
   }
+
   Command *command = malloc(sizeof(Command));
   createCommand(command, strdup(argv[2])); // TODO: make this support arguments
   // Search for an existing alias with the same name
@@ -312,6 +317,7 @@ int alias_fn(int argc, char **argv, Command **aliases, int *aliasC,
       return 0;
     }
   }
+
   printf("No more aliases can be set. Maximum limit reached.\n");
   return 1;
 }
@@ -326,7 +332,9 @@ int unalias_fn(int argc, char **argv, Command **aliases, int *aliasC,
   }
 
   for (int i = 0; i < TOTAL_CMDS; i++) {
+    
   }
+
   printf("Alias '%s' not found.\n", argv[1]);
   return 1;
 }
