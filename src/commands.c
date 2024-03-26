@@ -7,13 +7,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+
 int invoke_fn(int argc, char **argv, Command **aliases, int *aliasC,
               Command **history, int *historyC, Command **builtInCommands,
               int *builtInC) {
   if (argc == 1) {
     for (int i = 0; i < *historyC; i++) {
       if (history[i] != NULL) {
-
         printf("\n%d: %s", i, history[i]->tokens[0]);
       }
     }
@@ -40,6 +41,7 @@ int chdir_fn(int argc, char **argv, Command **aliases, int *aliasC,
     printf("cd: Too many arguments\n");
     return 1;
   }
+
   if (argc < 1) {
     printf("cd: No arguments provided\n");
     return 1;
@@ -65,6 +67,7 @@ int setpath_fn(int argc, char **argv, Command **aliases, int *aliasC,
     printf("setpath: Too many arguments\n");
     return 1;
   }
+
   if (argc < 1) {
     printf("setpath: No arguments provided\n");
     return 1;
@@ -74,13 +77,13 @@ int setpath_fn(int argc, char **argv, Command **aliases, int *aliasC,
 
   return 0;
 }
-int pasteOffsetArguments(Command *child, Command *parent,
 
-                         int offset) {
+int pasteOffsetArguments(Command *child, Command *parent, int offset) {
   char **argvC = calloc(child->length + parent->length, sizeof(char *));
   for (int i = 0; i < child->length; i++) {
     argvC[i] = child->tokens[i];
   }
+
   for (int i = child->length; i < child->length + parent->length - 1; i++) {
     argvC[i] = strdup(parent->tokens[i - child->length + 1]);
   }
@@ -109,42 +112,43 @@ int executeCommand(Command *command, Command **aliases, int *aliasC,
   extendCommand(command, cmdChkExists(aliases, *aliasC, command));
 
   switch (command->type) {
+    case BUILTIN:
+      fflush(stdout);
+      command->fn(command->length, command->tokens, aliases, aliasC, history,
+                  historyC, builtInCommands, builtInC);
+      break;
 
-  case BUILTIN:
-    fflush(stdout);
-    command->fn(command->length, command->tokens, aliases, aliasC, history,
-                historyC, builtInCommands, builtInC);
-    break;
-  case EXECUTE:
-    // remember that when aliases occur, you must compile the arguments in case
-    // they are included.
-    {
-      pid_t pid = fork();
-      if (pid < 0) {
-        perror("No forking allowed apparently!");
-        return 1;
-      }
-
-        if (pid == 0) {
-          char *cmdCopy = strdup(command->tokens[0]); // feel free to improve this name. this
-                                                      // var is used to send an error back
-                                                      // when execvp fails.
-          execvp(cmdCopy, command->tokens); // no need to check if it fails. it
-                                            // only comes back when it fails, as
-                                            // it exits on success.
-          perror(cmdCopy);
-          exit(0);
+    case EXECUTE:
+      // remember that when aliases occur, you must compile the arguments in case
+      // they are included.
+      {
+        pid_t pid = fork();
+        if (pid < 0) {
+          perror("No forking allowed apparently!");
+          return 1;
         }
 
-      wait(NULL);
-    }
-    break;
-  case ALIAS_COMMAND:
-    pasteOffsetArguments(command->alias, command, 0);
-    printf("executing alias's child: %s\n", command->alias->tokens[0]);
-    executeCommand(command->alias, aliases, aliasC, history, historyC,
-                   builtInCommands, builtInC);
-    break;
+          if (pid == 0) {
+            char *cmdCopy = strdup(command->tokens[0]); // feel free to improve this name. this
+                                                        // var is used to send an error back
+                                                        // when execvp fails.
+            execvp(cmdCopy, command->tokens); // no need to check if it fails. it
+                                              // only comes back when it fails, as
+                                              // it exits on success.
+            perror(cmdCopy);
+            exit(0);
+          }
+
+        wait(NULL);
+      }
+      break;
+
+    case ALIAS_COMMAND:
+      pasteOffsetArguments(command->alias, command, 0);
+      printf("executing alias's child: %s\n", command->alias->tokens[0]);
+      executeCommand(command->alias, aliases, aliasC, history, historyC,
+                    builtInCommands, builtInC);
+      break;
   }
 
   return 0;
@@ -154,6 +158,7 @@ int freeCommand(Command *command) {
   for (int i = 0; i < command->length; i++) {
     free(command->tokens[i]);
   }
+
   free(command->tokens);
   if (command->type == ALIAS_COMMAND) {
     freeCommand(command->alias);
@@ -164,8 +169,8 @@ int freeCommand(Command *command) {
 
 int freeCommands(Command **commands, int argc) {
   for (int i = 0; i < argc; i++) {
-    if (commands[i] == NULL)
-      continue;
+    if (commands[i] == NULL) continue;
+
     freeCommand(commands[i]);
     free(commands[i]);
   }
@@ -179,12 +184,14 @@ Command *copyCommand(Command *child, Command *parent) {
   child->length = parent->length;
   child->type = parent->type;
   child->fn = parent->fn;
+
   for (int i = 0; i < parent->length; i++) {
     child->tokens[i] = strdup(parent->tokens[i]);
   }
 
   return child;
 }
+
 int extendCommand(Command *child, Command *parent) {
   if (child == parent) return 0;
 
@@ -266,12 +273,14 @@ Command *_createBuiltInCommand(char *input, int (*fn)(int, char **, Command **,
 int _tokenise(char **argv, int *argc, char *input) {
   *argc = 0;
   char *dummy = strtok(input, " \n");
+
   do {
     printf("tokenising\n");
     argv[*argc] = strdup(dummy);
     dummy = strtok(NULL, " \n");
     (*argc)++;
   } while (dummy != NULL);
+
   return 0;
 }
 
@@ -289,6 +298,7 @@ int alias_fn(int argc, char **argv, Command **aliases, int *aliasC,
       }
       head += 1;
     }
+
     printf("\n");
     return 0;
   }
